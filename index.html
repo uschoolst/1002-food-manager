@@ -194,6 +194,7 @@
   <section class="card" id="formCard" style="display:none;">
     <h2>Step 2・填寫你要帶的餐點</h2>
     <p class="hint" id="categoryHint"></p>
+    <input type="text" id="studentIdInput" placeholder="請輸入孩子的學號" maxlength="20">
     <input type="text" id="dishInput" placeholder="輸入餐點名稱，或點下面的推薦項目" maxlength="40">
     <div class="chip-list" id="chipList"></div>
     <button class="primary" id="submitBtn">送出</button>
@@ -203,7 +204,7 @@
   <section class="card">
     <div class="refresh-row">
       <h2 style="margin:0;">目前大家填寫的餐點</h2>
-      <button id="refreshBtn">⟳ 重新整理</button>
+      <button id="refreshBtn">🔄 重新整理</button>
     </div>
     <div id="listArea"><div class="loading">載入中…</div></div>
   </section>
@@ -237,7 +238,7 @@
 <script>
 /* ====== 這裡改成你部署好的 Google Apps Script「Web 應用程式」網址 ====== */
 /* 長得像 https://script.google.com/macros/s/AKfycb.../exec */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwBWq20K70CiwbYaHN4d59jEO8_EfR3cKmudc3fiwkTmA6OF_w083wpR7Rx4-IGGqGG/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsNeAEEpfE0M5gX7pyVFw4Jkw6FGpNQzeCST0fBOC_dOsagpqvxucb8hvC9kEIHiMB/exec";
 /* ======================================================================= */
 
 const HOUSES = {
@@ -272,6 +273,9 @@ const deviceId = getDeviceId();
 function getPartyCode() { return localStorage.getItem("party_code") || ""; }
 function setPartyCode(code) { localStorage.setItem("party_code", code); }
 
+function getSavedStudentId() { return localStorage.getItem("party_student_id") || ""; }
+function saveStudentId(id) { localStorage.setItem("party_student_id", id); }
+
 let selectedHouse = localStorage.getItem("party_selected_house") || null;
 let currentItems = [];
 
@@ -295,6 +299,7 @@ function selectHouse(house) {
   document.getElementById("formCard").style.display = "block";
   document.getElementById("categoryHint").textContent =
     `你的書院是「${house}」，主題是「${HOUSES[house].category}」。下面是推薦項目，也可以自己輸入：`;
+  document.getElementById("studentIdInput").value = getSavedStudentId();
   renderChips(house);
 }
 if (selectedHouse && HOUSES[selectedHouse]) selectHouse(selectedHouse);
@@ -326,12 +331,14 @@ function callScript(action, payload) {
 
 // ---------- 送出新餐點 ----------
 document.getElementById("submitBtn").addEventListener("click", async () => {
+  const studentId = document.getElementById("studentIdInput").value.trim();
   const dish = document.getElementById("dishInput").value.trim();
   const msgEl = document.getElementById("formMsg");
   msgEl.textContent = "";
   msgEl.className = "msg";
 
   if (!selectedHouse) { msgEl.textContent = "請先選擇書院"; msgEl.className = "msg error"; return; }
+  if (!studentId) { msgEl.textContent = "請輸入孩子的學號"; msgEl.className = "msg error"; return; }
   if (!dish) { msgEl.textContent = "請輸入餐點名稱"; msgEl.className = "msg error"; return; }
 
   const dup = currentItems.some((it) => it.dish.trim().toLowerCase() === dish.toLowerCase());
@@ -340,8 +347,9 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
   await ensurePartyCode(async () => {
     document.getElementById("submitBtn").disabled = true;
     try {
-      const data = await callScript("add", { house: selectedHouse, dish, deviceId });
+      const data = await callScript("add", { house: selectedHouse, dish, studentId, deviceId });
       if (data.item) {
+        saveStudentId(studentId);
         document.getElementById("dishInput").value = "";
         msgEl.textContent = "填寫成功！";
         msgEl.className = "msg ok";
