@@ -147,6 +147,20 @@
   .refresh-row button { border: none; background: none; color: var(--color-accent-dark); font-size: 0.85rem; cursor: pointer; }
   .loading { text-align: center; color: var(--color-muted); font-size: 0.85rem; padding: 10px; }
 
+  .tip-card {
+    background: #fff8e6;
+    border: 1px solid #f0deac;
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #6b5a2a;
+  }
+  .tip-card strong { display: block; margin-bottom: 6px; font-size: 0.95rem; color: #4a3e1a; }
+  .tip-card p { margin: 0 0 6px; }
+  .tip-card p:last-child { margin-bottom: 0; }
+
   dialog { border: none; border-radius: var(--radius); padding: 0; max-width: 90vw; width: 360px; }
   dialog::backdrop { background: rgba(0,0,0,0.4); }
   .dialog-body { padding: 20px; }
@@ -164,6 +178,13 @@
 </header>
 
 <main>
+
+  <div class="tip-card">
+    <strong>💡小提醒</strong>
+    <p>歡迎大家準備一些獨特、不一樣的食物，讓 Party 的食物更加多樣化，大家也能吃到更多平常比較少見的美食！</p>
+    <p>如果自己不方便準備特別的料理也沒關係，也很歡迎帶一些方便準備、好吃的食物，例如日式壽司等。</p>
+    <p>不一定要從推薦清單中選擇，只要是適合分享的食物都可以！ 🍣</p>
+  </div>
 
   <section class="card">
     <h2>Step 1・選擇你的書院</h2>
@@ -216,7 +237,7 @@
 <script>
 /* ====== 這裡改成你部署好的 Google Apps Script「Web 應用程式」網址 ====== */
 /* 長得像 https://script.google.com/macros/s/AKfycb.../exec */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwBWq20K70CiwbYaHN4d59jEO8_EfR3cKmudc3fiwkTmA6OF_w083wpR7Rx4-IGGqGG/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/請貼上你的部署ID/exec";
 /* ======================================================================= */
 
 const HOUSES = {
