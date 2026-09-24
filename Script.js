@@ -1,6 +1,6 @@
 /* ====== 這裡改成你部署好的 Google Apps Script「Web 應用程式」網址 ====== */
 /* 長得像 https://script.google.com/macros/s/AKfycb.../exec */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby9P5SrlAacsL1Bs3h4SXmJnGpDP9g41UzuDDcOsa257-AsNXwpRp6yySGXDi8V6Hg/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBtqHYjPQIQOFAGmsJcy2wo6q1qYVqfpxXb97JjNSLwqirhrFWS4klAoeyIawu6t0L/exec";
 /* ======================================================================= */
 
 const HOUSES = {
@@ -31,9 +31,6 @@ function getDeviceId() {
   return id;
 }
 const deviceId = getDeviceId();
-
-function getPartyCode() { return localStorage.getItem("party_code") || ""; }
-function setPartyCode(code) { localStorage.setItem("party_code", code); }
 
 function getSavedStudentId() { return localStorage.getItem("party_student_id") || ""; }
 function saveStudentId(id) { localStorage.setItem("party_student_id", id); }
@@ -87,7 +84,7 @@ function callScript(action, payload) {
   return fetch(SCRIPT_URL, {
     method: "POST",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({ action, code: getPartyCode(), ...payload }),
+    body: JSON.stringify({ action, ...payload }),
   }).then((res) => res.json());
 }
 
@@ -106,52 +103,26 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
   const dup = currentItems.some((it) => String(it.dish || "").trim().toLowerCase() === dish.toLowerCase());
   if (dup) { msgEl.textContent = "這道菜已經有人填寫了，換一個吧！"; msgEl.className = "msg error"; return; }
 
-  await ensurePartyCode(async () => {
-    document.getElementById("submitBtn").disabled = true;
-    try {
-      const data = await callScript("add", { house: selectedHouse, dish, studentId, deviceId });
-      if (data.item) {
-        saveStudentId(studentId);
-        document.getElementById("dishInput").value = "";
-        msgEl.textContent = "填寫成功！";
-        msgEl.className = "msg ok";
-        await loadItems();
-      } else {
-        msgEl.textContent = data.error || "送出失敗，請再試一次";
-        msgEl.className = "msg error";
-      }
-    } catch (e) {
-      msgEl.textContent = "網路連線異常，請稍後再試";
+  document.getElementById("submitBtn").disabled = true;
+  try {
+    const data = await callScript("add", { house: selectedHouse, dish, studentId, deviceId });
+    if (data.item) {
+      saveStudentId(studentId);
+      document.getElementById("dishInput").value = "";
+      msgEl.textContent = "填寫成功！";
+      msgEl.className = "msg ok";
+      await loadItems();
+    } else {
+      msgEl.textContent = data.error || "送出失敗，請再試一次";
       msgEl.className = "msg error";
-    } finally {
-      document.getElementById("submitBtn").disabled = false;
     }
-  });
+  } catch (e) {
+    msgEl.textContent = "網路連線異常，請稍後再試";
+    msgEl.className = "msg error";
+  } finally {
+    document.getElementById("submitBtn").disabled = false;
+  }
 });
-
-// ---------- 通關密語 ----------
-function ensurePartyCode(callback) {
-  return new Promise((resolve) => {
-    const existing = getPartyCode();
-    if (existing) { callback().then(resolve); return; }
-    const dialog = document.getElementById("codeDialog");
-    dialog.showModal();
-    const onConfirm = () => {
-      const code = document.getElementById("codeInput").value.trim();
-      if (code) setPartyCode(code);
-      dialog.close();
-      cleanup();
-      callback().then(resolve);
-    };
-    const onCancel = () => { dialog.close(); cleanup(); resolve(); };
-    function cleanup() {
-      document.getElementById("codeConfirm").removeEventListener("click", onConfirm);
-      document.getElementById("codeCancel").removeEventListener("click", onCancel);
-    }
-    document.getElementById("codeConfirm").addEventListener("click", onConfirm);
-    document.getElementById("codeCancel").addEventListener("click", onCancel);
-  });
-}
 
 // ---------- 載入 & 顯示清單 ----------
 async function loadItems() {
